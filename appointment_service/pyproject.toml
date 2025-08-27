@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "appointment-service"
+version = "0.1.0"
+description = ""
+authors = ["AlPetrovv"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+sqlalchemy = "^2.0.43"
+fastapi = "^0.116.1"
+uvicorn = "^0.35.0"
+alembic = "^1.16.4"
+pydantic = "^2.11.7"
+asyncpg = "^0.30.0"
+pydantic-settings = "^2.10.1"
+sqlalchemy-utils = "^0.41.2"
+pydantic-extra-types = "^2.10.5"
+redis = "^6.4.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.4.1"
+
+
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.12.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.isort]
+known-first-party = ["src", ]
+known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette"]
+default-section = "THIRDPARTY"
+section-order = ["THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
+
+[tool.ruff.lint]
+select = [
+    "E501",  # Checks for lines that exceed the specified maximum character length
+    "W292",  # Checks for files missing a new line at the end of the file
+    "F401",  # Checks for unused imports
+]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
