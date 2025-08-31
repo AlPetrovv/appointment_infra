@@ -2,6 +2,6 @@ from enum import StrEnum
 
 
 class AppointmentStatus(StrEnum):
-   pending = "Pending"
-   approved = "Approved"
-   canceled = "Canceled"
+    created = "Created"
+    confirmed = "Confirmed"
+    canceled = "Canceled"

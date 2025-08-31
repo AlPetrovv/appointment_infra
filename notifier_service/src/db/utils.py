@@ -1,5 +1,5 @@
 def camel_case_to_snake_case(input_str: str) -> str:
-    """Taken from https://github.com/mahenzon/ri-sdk-python-wrapper/blob/master/ri_sdk_codegen/utils/case_converter.py
+    """Taken fromhttps://github.com/mahenzon/ri-sdk-python-wrapper/blob/master/ri_sdk_codegen/utils/case_converter.py
     >>> camel_case_to_snake_case("SomeSDK")
     'some_sdk'
     >>> camel_case_to_snake_case("RServoDrive")

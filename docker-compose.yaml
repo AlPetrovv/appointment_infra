@@ -1,0 +1,98 @@
+version: "3.9"
+
+services:
+  appointment_service:
+    container_name: appointment_service
+    build: appointment_service
+    env_file:
+      - appointment_service/envs/app.env
+    ports:
+      - "${APPOINTMENT_SERVICE_PORT}:${APPOINTMENT_SERVICE_PORT}"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      appointment_service_db:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  notifier_service:
+    container_name: notifier_service
+    build: notifier_service
+    env_file:
+      - notifier_service/envs/app.env
+    ports:
+      - "${NOTIFIER_SERVICE_PORT}:${NOTIFIER_SERVICE_PORT}"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      notifier_service_db:
+        condition: service_started
+    restart: unless-stopped
+
+  appointment_service_db:
+    image: postgres:16-alpine
+    container_name: appointment_service_db
+    volumes:
+      - appointment_service_db_data:/var/lib/postgresql/data/
+    env_file:
+      - appointment_service/envs/app.env
+    command: -p ${APPOINTMENT_SERVICE_DB_PORT}
+    ports:
+      - "${APPOINTMENT_SERVICE_DB_PORT}:${APPOINTMENT_SERVICE_DB_PORT}"
+    restart: unless-stopped
+
+  notifier_service_db:
+    image: postgres:16-alpine
+    container_name: notifier_service_db
+    volumes:
+      - notifier_service_db_data:/var/lib/postgresql/data/
+    env_file:
+      - notifier_service/envs/app.env
+    command: -p ${NOTIFIER_SERVICE_DB_PORT}
+    ports:
+      - "${NOTIFIER_SERVICE_DB_PORT}:${NOTIFIER_SERVICE_DB_PORT}"
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    expose:
+      - "5672"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq
+      - rabbitmq-log:/var/log/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  appointment_service_db_data:
+  notifier_service_db_data:
+  redis_data:
+  rabbitmq-lib:
+  rabbitmq-log:
+
+

@@ -18,10 +18,17 @@ pydantic-settings = "^2.10.1"
 sqlalchemy-utils = "^0.41.2"
 pydantic-extra-types = "^2.10.5"
 redis = "^6.4.0"
+faststream = { extras = ["rabbit"], version = "^0.5.48" }
+fastapi-pagination = "^0.14.0"
+phonenumbers = "^9.0.12"
+aiormq = "^6.9.0"
+orjson = "^3.11.3"
 
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.4.1"
+pytest-asyncio = "^1.1.0"
+httpx = "^0.28.1"
 
 
 [tool.poetry.group.lint.dependencies]
@@ -31,17 +38,40 @@ ruff = "^0.12.10"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "src/tests/appointments"
+]
+
+[tool.ruff]
+line-length = 119
+
 [tool.ruff.isort]
 known-first-party = ["src", ]
-known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette"]
-default-section = "THIRDPARTY"
-section-order = ["THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
+known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette", "faststream"]
 
 [tool.ruff.lint]
 select = [
-    "E501",  # Checks for lines that exceed the specified maximum character length
-    "W292",  # Checks for files missing a new line at the end of the file
-    "F401",  # Checks for unused imports
+    "A",  # prevent using keywords that clobber python builtins
+    "B",  # bugbear: security warnings
+    "D", # pydocstyle
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "ISC",  # implicit string concatenation
+    "RUF",  # the ruff developer's own rules
+]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", #  Missing docstring in public method
+    "D103", #  Missing docstring in public function
+    "D104", #  Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+    "D205", # 1 blank line required between summary line and description
 ]
 
 

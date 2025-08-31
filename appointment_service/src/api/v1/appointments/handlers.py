@@ -1,29 +1,124 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Response, HTTPException
+from fastapi.params import Depends, Query
+from fastapi_pagination import paginate
+from starlette import status
 
-from .schemas import IdempotencyHeaders
-from schemas.appointments import AppointmentCreate, AppointmentRead
+from core.enums import AppointmentStatus
+from db.models import Appointment
+
+from schemas.appointments import (
+    AppointmentCreate,
+    AppointmentRead,
+    AppointmentPartialUpdate,
+)
 from redis_tools.client import redis_client
 from api.dependencies.repo import RepoDep
+from .services import process_appointment_create
+from api.v1.pagination import CustomPage
+from api.dependencies.appointment import get_appointment
 
 router = APIRouter(
     prefix="/appointments",
     tags=["Appointments"],
-    responses={404: {"description": "Not found"}},
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Not found"}},
 )
 
 
-@router.post("/", response_model=AppointmentRead)
+@router.get("/", response_model=CustomPage[AppointmentRead])
+async def get_appointments(
+        repo: RepoDep,
+        appointment_status: Annotated[
+            AppointmentStatus, Query(alias="status")
+        ] = AppointmentStatus.created,
+):
+    appointments = await repo.appointment.get_by_status(status=appointment_status)
+    return paginate(appointments)
+
+
+@router.post(
+    "/",
+    response_model=AppointmentRead,
+    responses={
+        status.HTTP_200_OK: {"model": AppointmentRead},
+        status.HTTP_201_CREATED: {"model": AppointmentRead},
+    },
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_appointment(
         repo: RepoDep,
         appointment_in: AppointmentCreate,
-        headers: Annotated[IdempotencyHeaders, Header()]
+        idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+        response: Response,
 ):
-    appointment_key = await redis_client.get(headers.idempotency_key)
-    if appointment_key:
-        return await repo.appointment.get()
+    appointment_id = await redis_client.get(idempotency_key)
+    if appointment_id:
+        response.status_code = status.HTTP_200_OK
+        appointment = await repo.appointment.get(int(appointment_id))
+        return appointment
     else:
-        return await repo.appointment.create(appointment_in)
+        appointment = await process_appointment_create(
+            repo=repo, appointment_in=appointment_in, idempotency_key=idempotency_key
+        )
+        return appointment
 
 
+@router.patch(
+    "/{id}/cancel",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "OK",
+            "content": {"application/json": {"example": "OK"}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Operation not allowed",
+            "value": "Operation not allowed",
+            "content": {"application/json": {"example": "Operation not allowed"}},
+        },
+    },
+    status_code=status.HTTP_200_OK,
+)
+async def cancel_appointment(
+        repo: RepoDep,
+        appointment: Annotated[Appointment, Depends(get_appointment)],
+        response: Response,
+        reason: Optional[str] = None,
+
+):
+    if appointment.status == AppointmentStatus.confirmed and reason is None:
+        response.status_code = status.HTTP_409_CONFLICT
+        return "Operation not allowed"
+    model_in = AppointmentPartialUpdate(
+        status=AppointmentStatus.canceled, cancel_reason=reason
+    )
+    await repo.appointment.update_partial(model_in, instance=appointment)
+    return "OK"
+
+
+@router.patch(
+    "/{id}/confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "OK",
+            "value": "OK",
+            "content": {"application/json": {"example": "OK"}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Operation not allowed",
+            "value": "Operation not allowed",
+            "content": {"application/json": {"example": "Operation not allowed"}},
+        },
+    },
+)
+async def confirm_appointment(
+        repo: RepoDep,
+        appointment: Annotated[Appointment, Depends(get_appointment)],
+        response: Response
+):
+    if appointment.status != AppointmentStatus.created:
+        response.status_code = status.HTTP_409_CONFLICT
+        return "Operation not allowed"
+    model_in = AppointmentPartialUpdate(status=AppointmentStatus.confirmed)
+    await repo.appointment.update_partial(model_in, instance=appointment)
+    return "OK"

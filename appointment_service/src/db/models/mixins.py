@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import func, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -10,7 +10,6 @@ class IDPKINTMixin:
 
 class CreatedAtMixin:
     created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         default=dt.datetime.now,
-        nullable=False,
     )

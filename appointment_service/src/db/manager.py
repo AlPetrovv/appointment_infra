@@ -1,7 +1,12 @@
 import contextlib
 from typing import AsyncIterator, Any
 
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker, create_async_engine, AsyncConnection)
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+    AsyncConnection,
+)
 
 from core.config import settings
 
@@ -9,7 +14,9 @@ from core.config import settings
 class DatabaseSessionManager:
     def __init__(self, db_url: str, engine_kwargs: dict[str, Any]):
         self._engine = create_async_engine(db_url, **engine_kwargs)
-        self._sessionmaker = async_sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
+        self._sessionmaker = async_sessionmaker(
+            autocommit=False, autoflush=False, bind=self._engine
+        )
 
     @contextlib.asynccontextmanager
     async def connect(self) -> AsyncIterator[AsyncConnection]:
@@ -44,6 +51,5 @@ class DatabaseSessionManager:
 
 
 db_manager = DatabaseSessionManager(
-    db_url=str(settings.db.url),
-    engine_kwargs=settings.db.engine_kwargs
+    db_url=str(settings.db.url), engine_kwargs=settings.db.engine_kwargs
 )

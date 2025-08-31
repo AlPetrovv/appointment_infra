@@ -1,8 +1,9 @@
 import os.path
 import pathlib
-from typing import Any
+from typing import Any, Optional
 
-from pydantic import BaseModel, PostgresDsn
+from pydantic import BaseModel, PostgresDsn, AmqpDsn, RedisDsn
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASEDIR = pathlib.Path(__file__).parent.parent
@@ -12,9 +13,15 @@ class ApiV1(BaseModel):
     prefix: str = "/v1"
 
 
+class Rabbit(BaseModel):
+    url: AmqpDsn
+    exchange_name: str = "appointments.events"
+    routing_key: str = "appointment.created"
+
+
 class RedisSettings(BaseModel):
     ttl: int = 60 * 60 * 24  # 24 hours
-    url: str
+    url: RedisDsn
 
 
 class Database(BaseModel):
@@ -41,8 +48,9 @@ class Database(BaseModel):
             "echo_pool": self.echo_pool,
             "pool_size": self.pool_size,
             "max_overflow": self.max_overflow,
-            "pool_pre_ping": self.pool_pre_ping
+            "pool_pre_ping": self.pool_pre_ping,
         }
+
 
 class Uvicorn(BaseModel):
     host: str = "0.0.0.0"
@@ -57,10 +65,11 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
     )
-    api: ApiV1 = ApiV1()
+    api_v1: ApiV1 = ApiV1()
+    uvicorn: Uvicorn = Uvicorn()
     db: Database
     redis: RedisSettings
-    uvicorn: Uvicorn()
+    rabbit: Rabbit
 
 
 settings = Settings()  # noqa
