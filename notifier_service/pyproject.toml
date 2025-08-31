@@ -1,0 +1,71 @@
+[tool.poetry]
+name = "notifier-service"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.116.1"
+uvicorn = "^0.35.0"
+sqlalchemy = "^2.0.43"
+alembic = "^1.16.5"
+asyncpg = "^0.30.0"
+pydantic = "^2.11.7"
+pydantic-settings = "^2.10.1"
+sqlalchemy-utils = "^0.41.2"
+phonenumbers = "^9.0.12"
+pydantic-extra-types = "^2.10.5"
+fastapi-pagination = "^0.14.0"
+faststream = {extras = ["rabbit"], version = "^0.5.48"}
+
+
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.12.11"
+
+
+[tool.poetry.group.test.dependencies]
+pytest-asyncio = "^1.1.0"
+aiohttp = "^3.12.15"
+pytest = "^8.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.isort]
+known-first-party = ["src", ]
+known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette", "faststream"]
+default-section = "THIRDPARTY"
+section-order = ["THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
+
+[tool.ruff.lint]
+select = [
+    "A",  # prevent using keywords that clobber python builtins
+    "B",  # bugbear: security warnings
+    "D", # pydocstyle
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "ISC",  # implicit string concatenation
+    "RUF",  # the ruff developer's own rules
+]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", #  Missing docstring in public method
+    "D103", #  Missing docstring in public function
+    "D104", #  Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+    "D205", # 1 blank line required between summary line and description
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
