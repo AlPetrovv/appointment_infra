@@ -18,7 +18,7 @@ async def process_appointment_create(
     await redis_client.set(idempotency_key, value=appointment.id)
     payload = AppointmentPayload.model_validate(appointment, from_attributes=True)
     appointment_pub = AppointmentNotificationPub(
-        occurred_at=appointment_in.created_at,
+        occurred_at=appointment.created_at,
         event_type="AppointmentCreated",
         payload=payload,
     )
