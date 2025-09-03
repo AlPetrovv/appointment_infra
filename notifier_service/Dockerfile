@@ -34,5 +34,3 @@ RUN chown -R app:app /home/app/
 
 # switch to "app" user
 USER app
-
-CMD ["sh", "scripts/entrypoint.sh"]

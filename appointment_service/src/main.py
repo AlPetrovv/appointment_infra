@@ -3,6 +3,7 @@ import contextlib
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
+from fastapi_pagination.utils import disable_installed_extensions_check
 
 from core.config import settings
 from db.manager import db_manager
@@ -13,8 +14,10 @@ from routers import main_router
 
 @contextlib.asynccontextmanager
 async def lifespan(_: FastAPI):
+    db_manager.init()
     await rabbit_broker.start()
     await rabbit_broker.declare_exchange(rabbit_exchange)
+    disable_installed_extensions_check()
     yield
     await redis_client.close()
     await rabbit_broker.stop()
@@ -28,13 +31,12 @@ def create_app():
         lifespan=lifespan,
         default_response_class=ORJSONResponse,
     )
+    app.include_router(main_router)
+    add_pagination(app)
     return app
 
 
 main_app = create_app()
-add_pagination(main_app)
-
-main_app.include_router(main_router)
 
 if __name__ == "__main__":
     import uvicorn

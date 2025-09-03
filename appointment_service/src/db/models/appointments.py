@@ -25,9 +25,7 @@ class Appointment(CreatedAtMixin, IDPKINTMixin, Base):
     timeslot_start: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
     timeslot_end: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
     # status
-    status: Mapped[AppointmentStatus] = mapped_column(
-        Enum(AppointmentStatus), default=AppointmentStatus.created
-    )
+    status: Mapped[AppointmentStatus] = mapped_column(Enum(AppointmentStatus), default=AppointmentStatus.created)
     # additional
     cancel_reason: Mapped[Optional[str]] = mapped_column(String(255))
 

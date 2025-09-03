@@ -3,9 +3,10 @@ version: "3.9"
 services:
   appointment_service:
     container_name: appointment_service
-    build: appointment_service
+    build: ../appointment_service
     env_file:
-      - appointment_service/envs/app.env
+      - ../appointment_service/envs/app.env
+    command: ["sh", "scripts/entrypoint.sh"]
     ports:
       - "${APPOINTMENT_SERVICE_PORT}:${APPOINTMENT_SERVICE_PORT}"
     depends_on:
@@ -19,9 +20,10 @@ services:
 
   notifier_service:
     container_name: notifier_service
-    build: notifier_service
+    build: ../notifier_service
     env_file:
-      - notifier_service/envs/app.env
+      - ../notifier_service/envs/app.env
+    command: ["sh", "scripts/entrypoint.sh"]
     ports:
       - "${NOTIFIER_SERVICE_PORT}:${NOTIFIER_SERVICE_PORT}"
     depends_on:
@@ -37,7 +39,7 @@ services:
     volumes:
       - appointment_service_db_data:/var/lib/postgresql/data/
     env_file:
-      - appointment_service/envs/app.env
+      - ../appointment_service/envs/app.env
     command: -p ${APPOINTMENT_SERVICE_DB_PORT}
     ports:
       - "${APPOINTMENT_SERVICE_DB_PORT}:${APPOINTMENT_SERVICE_DB_PORT}"
@@ -49,7 +51,7 @@ services:
     volumes:
       - notifier_service_db_data:/var/lib/postgresql/data/
     env_file:
-      - notifier_service/envs/app.env
+      - ../notifier_service/envs/app.env
     command: -p ${NOTIFIER_SERVICE_DB_PORT}
     ports:
       - "${NOTIFIER_SERVICE_DB_PORT}:${NOTIFIER_SERVICE_DB_PORT}"
@@ -59,8 +61,8 @@ services:
     image: redis:alpine
     container_name: redis
     restart: always
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -73,9 +75,6 @@ services:
     container_name: rabbitmq
     expose:
       - "5672"
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest

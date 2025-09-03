@@ -1,8 +1,9 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
-from fastapi import APIRouter, Header, Response, HTTPException
+from fastapi import APIRouter, Header, Response
 from fastapi.params import Depends, Query
 from fastapi_pagination import paginate
+
 from starlette import status
 
 from core.enums import AppointmentStatus
@@ -15,6 +16,7 @@ from schemas.appointments import (
 )
 from redis_tools.client import redis_client
 from api.dependencies.repo import RepoDep
+from .schemas import CancelAppointmentBody
 from .services import process_appointment_create
 from api.v1.pagination import CustomPage
 from api.dependencies.appointment import get_appointment
@@ -28,10 +30,8 @@ router = APIRouter(
 
 @router.get("/", response_model=CustomPage[AppointmentRead])
 async def get_appointments(
-        repo: RepoDep,
-        appointment_status: Annotated[
-            AppointmentStatus, Query(alias="status")
-        ] = AppointmentStatus.created,
+    repo: RepoDep,
+    appointment_status: Annotated[AppointmentStatus, Query(alias="status")] = AppointmentStatus.created,
 ):
     appointments = await repo.appointment.get_by_status(status=appointment_status)
     return paginate(appointments)
@@ -47,10 +47,10 @@ async def get_appointments(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_appointment(
-        repo: RepoDep,
-        appointment_in: AppointmentCreate,
-        idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
-        response: Response,
+    repo: RepoDep,
+    appointment_in: AppointmentCreate,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    response: Response,
 ):
     appointment_id = await redis_client.get(idempotency_key)
     if appointment_id:
@@ -80,18 +80,15 @@ async def create_appointment(
     status_code=status.HTTP_200_OK,
 )
 async def cancel_appointment(
-        repo: RepoDep,
-        appointment: Annotated[Appointment, Depends(get_appointment)],
-        response: Response,
-        reason: Optional[str] = None,
-
+    repo: RepoDep,
+    appointment: Annotated[Appointment, Depends(get_appointment)],
+    response: Response,
+    body: CancelAppointmentBody,
 ):
-    if appointment.status == AppointmentStatus.confirmed and reason is None:
+    if appointment.status == AppointmentStatus.confirmed and body.reason is None:
         response.status_code = status.HTTP_409_CONFLICT
         return "Operation not allowed"
-    model_in = AppointmentPartialUpdate(
-        status=AppointmentStatus.canceled, cancel_reason=reason
-    )
+    model_in = AppointmentPartialUpdate(status=AppointmentStatus.canceled, cancel_reason=body.reason)
     await repo.appointment.update_partial(model_in, instance=appointment)
     return "OK"
 
@@ -112,9 +109,7 @@ async def cancel_appointment(
     },
 )
 async def confirm_appointment(
-        repo: RepoDep,
-        appointment: Annotated[Appointment, Depends(get_appointment)],
-        response: Response
+    repo: RepoDep, appointment: Annotated[Appointment, Depends(get_appointment)], response: Response
 ):
     if appointment.status != AppointmentStatus.created:
         response.status_code = status.HTTP_409_CONFLICT

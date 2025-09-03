@@ -1,0 +1,92 @@
+
+services:
+  appointment_service_test:
+    container_name: appointment_service_test
+    build: ../appointment_service
+    env_file:
+      - ../appointment_service/envs/test.env
+    command: ["sh", "scripts/run_tests.sh"]
+    ports:
+      - "${APPOINTMENT_SERVICE_TEST_PORT}:${APPOINTMENT_SERVICE_TEST_PORT}"
+    depends_on:
+      rabbitmq_test:
+        condition: service_healthy
+      appointment_service_test_db:
+        condition: service_started
+      redis_test:
+        condition: service_started
+
+  notifier_service_test:
+    container_name: notifier_service_test
+    build: ../notifier_service
+    env_file:
+      - ../notifier_service/envs/test.env
+    command: ["sh", "scripts/run_tests.sh"]
+    ports:
+      - "${NOTIFIER_SERVICE_TEST_PORT}:${NOTIFIER_SERVICE_TEST_PORT}"
+    depends_on:
+      rabbitmq_test:
+        condition: service_healthy
+      notifier_service_test_db:
+        condition: service_started
+
+  appointment_service_test_db:
+    image: postgres:16-alpine
+    container_name: appointment_service_db_test
+    volumes:
+      - appointment_service_db_data_test:/var/lib/postgresql/data/
+    env_file:
+      - ../appointment_service/envs/test.env
+    command: -p ${APPOINTMENT_SERVICE_DB_TEST_PORT}
+    ports:
+      - "${APPOINTMENT_SERVICE_DB_TEST_PORT}:${APPOINTMENT_SERVICE_DB_TEST_PORT}"
+    restart: unless-stopped
+
+  notifier_service_test_db:
+    image: postgres:16-alpine
+    container_name: notifier_service_db_test
+    volumes:
+      - notifier_service_db_data_test:/var/lib/postgresql/data/
+    env_file:
+      - ../notifier_service/envs/test.env
+    command: -p ${NOTIFIER_SERVICE_DB_TEST_PORT}
+    ports:
+      - "${NOTIFIER_SERVICE_DB_TEST_PORT}:${NOTIFIER_SERVICE_DB_TEST_PORT}"
+    restart: unless-stopped
+  redis_test:
+    image: redis:alpine
+    container_name: redis_test
+    restart: always
+    command: --port 6380
+    expose:
+      - "6380"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  rabbitmq_test:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq_test
+    expose:
+      - "5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq
+      - rabbitmq-log:/var/log/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  appointment_service_db_data_test:
+  notifier_service_db_data_test:
+  redis_data:
+  rabbitmq-lib:
+  rabbitmq-log:

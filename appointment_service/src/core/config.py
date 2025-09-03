@@ -1,6 +1,5 @@
-import os.path
 import pathlib
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, PostgresDsn, AmqpDsn, RedisDsn
 
@@ -59,7 +58,6 @@ class Uvicorn(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=os.path.join(BASEDIR.as_posix(), "../envs/app.env"),
         extra="allow",
         case_sensitive=False,
         env_nested_delimiter="__",
@@ -72,4 +70,4 @@ class Settings(BaseSettings):
     rabbit: Rabbit
 
 
-settings = Settings()  # noqa
+settings = Settings()  # type: ignore

@@ -25,7 +25,5 @@ class AppointmentRepo(BaseRepo):
             order_by=[desc(self.model.created_at)],
         )
 
-    async def update_partial(
-        self, model_in: AppointmentPartialUpdate, instance: Appointment
-    ) -> "Appointment":
+    async def update_partial(self, model_in: AppointmentPartialUpdate, instance: Appointment) -> "Appointment":
         return await self._update_partial_model(model_in, instance)

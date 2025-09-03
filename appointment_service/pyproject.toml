@@ -29,6 +29,7 @@ orjson = "^3.11.3"
 pytest = "^8.4.1"
 pytest-asyncio = "^1.1.0"
 httpx = "^0.28.1"
+faker = "^37.6.0"
 
 
 [tool.poetry.group.lint.dependencies]
@@ -43,15 +44,12 @@ build-backend = "poetry.core.masonry.api"
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = [
-    "src/tests/appointments"
+    "src/tests/"
 ]
+asyncio_mode = "strict"
 
 [tool.ruff]
 line-length = 119
-
-[tool.ruff.isort]
-known-first-party = ["src", ]
-known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette", "faststream"]
 
 [tool.ruff.lint]
 select = [
@@ -74,6 +72,9 @@ ignore = [
     "D205", # 1 blank line required between summary line and description
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = ["src", ]
+known-third-party = ["sqlalchemy", "pydantic", "fastapi", "starlette", "faststream"]
 
 [tool.ruff.format]
 quote-style = "double"
