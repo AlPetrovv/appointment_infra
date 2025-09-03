@@ -30,6 +30,7 @@
 │       └── repos - repos for crud 
 │       ├── schemas - schemas for models
 |       └── redis_tools - redis integration
+│       ├── tests    
 ├── notifier_service
 │   ├── envs
 │   │   ├── app.env

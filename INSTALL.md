@@ -7,7 +7,8 @@
 ```shell
 touch appointment_service/envs/app.env
 touch notifier_service/envs/app.env
-touch docker-compose.env
+touch docker-compose/envs/.env
+touch docker-compose/envs/test.env
 ```
 * use templates for env files
 

@@ -60,16 +60,3 @@ migrate:
 test:
 	${DC} -f ${DC_FILE_TEST} ${TEST_ENV} up --build --remove-orphans
 	${DC} -f ${DC_FILE_TEST} ${TEST_ENV} down
-
-.PHONY: test-down
-test-down:
-	${DC} -f ${DC_FILE_TEST} ${TEST_ENV} down
-
-.PHONY: up-exclude-apps
-up-exclude-app:
-	${DC} -f ${DC_FILE} ${ENV} up ${APPOINTMENT_SERVICE_DB} ${NOTIFIER_SERVICE_DB} ${REDIS} ${RABBITMQ}
-
-.PHONY: up-exclude-apps-test
-up-exclude-app-test:
-	${DC} -f ${DC_FILE_TEST} ${TEST_ENV} up ${APPOINTMENT_SERVICE_TEST_DB} ${NOTIFIER_SERVICE_TEST_DB} ${REDIS_TEST} ${RABBITMQ_TEST}
-
